@@ -1,0 +1,194 @@
+body {
+    margin: auto;
+    height: 100%;
+    width: 100%;
+    z-index: -1;
+    font-family: 'Cabin', sans-serif;
+    background: url("../images/background.jpg") no-repeat fixed center;
+    background-size: cover;
+}
+
+.navbar {
+    overflow: hidden;
+    background-color: #333;
+    position: absolute;
+    top: 0;
+    margin: auto;
+    width: 100%;
+    min-width: 800px;
+}
+
+.navbar a {
+    margin: auto;
+    display: block;
+    color: #f2f2f2;
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+    font-size: 17px;
+}
+
+.navbar-nav {
+    margin: 0;
+    padding: 0;
+    text-align: center;
+}
+
+.navbar-nav li {
+    margin: auto;
+    text-align: center;
+    display: inline-block;
+}
+
+.navbar a:hover {
+    background: #ddd;
+    color: black;
+}
+
+.main {
+    margin-top: 50px;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    padding: 16px 0;
+    min-width: 800px;
+}
+
+.main h1 {
+    margin: auto;
+    font-size: 48px;
+    font-weight: 700;
+    letter-spacing: 7px;
+    text-align: center;
+    padding: 10px 0;
+    color: #333333;
+}
+
+#show {
+	possition: absolute;
+    margin: auto;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+    width: 100%;
+    height: 60%;
+    min-height: 500px;
+    overflow: auto;
+    color: #333;
+}
+
+.showdiv {
+    width: fit-content;
+    height: 25px;
+    float: left;
+    text-align: center;
+    padding: 10px;
+    display: inline-block;
+    border-radius: 10px;
+    margin: 10px 10px;
+    opacity: 0.7;
+}
+
+.showdiv:hover {
+    background-color: #333 !important;
+    color: white;
+}
+
+table a:link {
+	color: #666;
+	font-weight: bold;
+	text-decoration:none;
+}
+table a:visited {
+	color: #999999;
+	font-weight:bold;
+	text-decoration:none;
+}
+table a:active,
+table a:hover {
+	color: #bd5a35;
+	text-decoration:underline;
+}
+table {
+	font-family:Arial, Helvetica, sans-serif;
+	color:#666;
+	font-size:12px;
+	text-shadow: 1px 1px 0px #fff;
+	background:#eaebec;
+	margin:auto;
+	border:#ccc 1px solid;
+
+	-moz-border-radius:3px;
+	-webkit-border-radius:3px;
+	border-radius:3px;
+
+	-moz-box-shadow: 0 1px 2px #d1d1d1;
+	-webkit-box-shadow: 0 1px 2px #d1d1d1;
+	box-shadow: 0 1px 2px #d1d1d1;
+}
+table th {
+	padding:21px 25px 22px 25px;
+	border-top:1px solid #fafafa;
+	border-bottom:1px solid #e0e0e0;
+
+	background: #ededed;
+	background: -webkit-gradient(linear, left top, left bottom, from(#ededed), to(#ebebeb));
+	background: -moz-linear-gradient(top,  #ededed,  #ebebeb);
+}
+table th:first-child {
+	text-align: left;
+	padding-left:20px;
+}
+table tr:first-child th:first-child {
+	-moz-border-radius-topleft:3px;
+	-webkit-border-top-left-radius:3px;
+	border-top-left-radius:3px;
+}
+table tr:first-child th:last-child {
+	-moz-border-radius-topright:3px;
+	-webkit-border-top-right-radius:3px;
+	border-top-right-radius:3px;
+}
+table tr {
+	text-align: center;
+	padding-left:20px;
+}
+table td:first-child {
+	text-align: left;
+	padding-left:20px;
+	border-left: 0;
+}
+table td {
+	padding:18px;
+	border-top: 1px solid #ffffff;
+	border-bottom:1px solid #e0e0e0;
+	border-left: 1px solid #e0e0e0;
+
+	background: #fafafa;
+	background: -webkit-gradient(linear, left top, left bottom, from(#fbfbfb), to(#fafafa));
+	background: -moz-linear-gradient(top,  #fbfbfb,  #fafafa);
+}
+table tr.even td {
+	background: #f6f6f6;
+	background: -webkit-gradient(linear, left top, left bottom, from(#f8f8f8), to(#f6f6f6));
+	background: -moz-linear-gradient(top,  #f8f8f8,  #f6f6f6);
+}
+table tr:last-child td {
+	border-bottom:0;
+}
+table tr:last-child td:first-child {
+	-moz-border-radius-bottomleft:3px;
+	-webkit-border-bottom-left-radius:3px;
+	border-bottom-left-radius:3px;
+}
+table tr:last-child td:last-child {
+	-moz-border-radius-bottomright:3px;
+	-webkit-border-bottom-right-radius:3px;
+	border-bottom-right-radius:3px;
+}
+table tr:hover td {
+	background: #f2f2f2;
+	background: -webkit-gradient(linear, left top, left bottom, from(#f2f2f2), to(#f0f0f0));
+	background: -moz-linear-gradient(top,  #f2f2f2,  #f0f0f0);
+}
