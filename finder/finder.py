@@ -165,7 +165,7 @@ class Finder:
 
         non_coinjoin_outputs = num_inputs - num_coinjoin_outputs
 
-        if coinjoin_outputs and int(coinjoin_outputs[0][1]) < num_inputs and num_coinjoin_outputs > non_coinjoin_outputs:
+        if coinjoin_outputs and int(coinjoin_outputs[0][1]) <= num_inputs and num_coinjoin_outputs > non_coinjoin_outputs:
             return 1
 
         return 0
@@ -174,11 +174,13 @@ class Finder:
         dict = {}
         for out in outputs:
             value = out['value']
-            if value in dict:
+            if str(value) in dict:
                 dict[str(value)] += 1
             else:
                 dict[str(value)] = 1
+
         list = sorted(dict.items(), key=lambda d: d[1], reverse=True)
+
         return [item for item in list if item[1] > 1]
 
 
@@ -223,15 +225,21 @@ class Finder:
         """
         asm_list = asm.split(' ')
         for item in asm_list:
+            # signature
             if "ALL" in item:
                 continue
-            if item[0:2] == "03" or "04":
+            # pub key
+            if item[0:2] == "03" or item[0:2] == "04":
                 continue
             decoded = self.decode_script(item)
+            decoded_asm = decoded['asm']
+
             # Check decoded script
-            if "2 OP_CHEKMULTISIG" in decoded:
+            if "OP_UNKNOWN" in decoded_asm or "error" in decoded_asm:
+                continue
+            elif "2 OP_CHEKMULTISIG" in decoded_asm:
                 return 1
-            elif "OP_IF" in decoded and "OP_ELSE" in decoded:
+            elif "OP_IF" in decoded_asm and "OP_ELSE" in decoded_asm:
                 return 2
             else:
                 continue
