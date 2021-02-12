@@ -1,5 +1,6 @@
 from bitcoinrpc.authproxy import AuthServiceProxy, JSONRPCException
 import pymysql
+import time
 from datetime import datetime
 
 
@@ -31,6 +32,8 @@ def connect_mysql():
                                        cursorclass=pymysql.cursors.DictCursor)
     return mysql_connection
 
+def get_time():
+    return time.time()
 
 def convert_time(ts):
     """This method converts timestamp to standard time format
