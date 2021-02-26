@@ -147,19 +147,19 @@ class Finder:
                     continue
 
                 
-                t5 = tools.get_time()
-                if n > height_coinjoin and self.find_coinjoin(tx):
-                    self.insert_into_db(3, str(counter_coinjoin), txid, n, ttime)
-                    counter_coinjoin += 1
-                t6 = tools.get_time()
-                t_cj += t6-t5
+                # t5 = tools.get_time()
+                # if n > height_coinjoin and self.find_coinjoin(tx):
+                #     self.insert_into_db(3, str(counter_coinjoin), txid, n, ttime)
+                #     counter_coinjoin += 1
+                # t6 = tools.get_time()
+                # t_cj += t6-t5
                 # print("Check coinjoin: %.4f" % (t6-t5), end = "\n")
 
             # Entering next block, height plus 1
             
             t4 = tools.get_time()
             # print("This block: %.2f" % (t4-t3))
-            print("\rFetching blocks in %.2f seconds， check block time %.2f, txin: %.5f, txout: %.5f, coinjoin: %.5f...Current block: %d" % ((t2-t1), (t4-t3), t_txin, t_txout, t_cj, n), end="", flush=True)
+            print("\rFetching blocks in %.2f seconds， check block time %.2f, txin: %.5f, txout: %.5f, coinjoin: %.5f...Current block: %d" % ((t2-t1), (t4-t3), t_txin, t_txout, 0, n), end="", flush=True)
             # sleep(5)
 
         # Finish
@@ -194,10 +194,15 @@ class Finder:
         if len(tx['vin']) < 2 or len(tx['vout']) < 4:
             return 0
         num_inputs = self.get_unique_input_addr_len(tx['vin'])
+        print(num_inputs)
         if num_inputs < 2:
             return 0
         coinjoin_outputs, num_outputs = self.get_indistinguishable_output(tx['vout'])
-
+        print(num_outputs)
+        if num_outputs < 4:
+            return 0
+        print(num_outputs)
+        print(coinjoin_outputs)
         # Skip all unqualified txs
         if not coinjoin_outputs or num_inputs >= num_outputs or num_inputs < num_outputs/2:
             return 0
@@ -359,4 +364,4 @@ def check_script_type(asm):
 
 if __name__ == '__main__':
     find = Finder()
-    find.start(start=386410, batch=80)
+    find.start(start=531227, batch=80)
