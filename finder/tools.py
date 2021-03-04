@@ -14,7 +14,7 @@ def connect_prc():
     RPC_PASSWORD = '123456'
     RPC_PORT = 8332
     RPC_IP = '127.0.0.1'
-    rpc_connection = AuthServiceProxy('http://%s:%s@%s:%d' % (RPC_USER, RPC_PASSWORD, RPC_IP, RPC_PORT), timeout=20000  )
+    rpc_connection = AuthServiceProxy('http://%s:%s@%s:%d' % (RPC_USER, RPC_PASSWORD, RPC_IP, RPC_PORT), timeout=200000)
     return rpc_connection
 
 

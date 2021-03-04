@@ -1,19 +1,21 @@
-from math import floor
-
 import tools
 import re
-from multiprocessing import Process, Lock, Value, Array
+from multiprocessing import Process, Lock, Value
+from time import sleep
 
+# !important
+# Loosen the method for detecting coinjoin transactions from height 340090.
+# Need to re-examine the coinjoin found after height 340090.
 
 class Finder:
     def __init__(self):
         print("Initializing...")
-        self.rpc_connection = tools.connect_prc()
-        self.mysql_connection = tools.connect_mysql()
+        self.rpc = tools.connect_prc()
+        self.mysql = tools.connect_mysql()
 
-        if not self.rpc_connection:
+        if not self.rpc:
             raise Exception("No RPC connection!")
-        if not self.mysql_connection:
+        if not self.mysql:
             raise Exception("No MySql connection!")
         print("Initialization complete. \nConnection setup.")
 
@@ -23,7 +25,7 @@ class Finder:
         :return: Current blockchain height
         :rtype: int
         """
-        return self.rpc_connection.getblockcount()
+        return self.rpc.getblockcount()
 
     def start(self, start=0, end=0, batch=4, option=0b1111):
         """Find multisig transaction and fair exchange transactions in bitcoin from block height start to block height
@@ -33,81 +35,49 @@ class Finder:
         :param int end: Ending block height
         :param int batch: Batch processing for each rpc connection round trip. Default is 4.
         """
-
-        # flags
-        flag_multisig = (option & 0b1000) >> 3
-        flag_fe = (option & 0b0100) >> 2
-        flag_coinjoin = (option & 0b0010) >> 1
-        flag_sa = (option & 0b0001)
-        flags = [flag_multisig, flag_fe, flag_coinjoin, flag_sa]
-
         # init variables
         counter_multisig, height_multisig = self.get_latest_db_info(0)
         counter_fe, height_fe = self.get_latest_db_info(1)
+        # counter_coinswap, height_coinswap = self.get_latest_db_info(2)
         counter_coinjoin, height_coinjoin = self.get_latest_db_info(2)
         counter_sa, height_sa = self.get_latest_db_info(3)
 
+        # flags
+        # flag_multisig = (option & 0b1000) >> 3
+        # flag_fe = (option & 0b0100) >> 2
+        # flag_coinjoin = (option & 0b0010) >> 1
+        # flag_sa = (option & 0b0001)
 
         if end == 0:
             end = self.get_height()
 
-        print("Search options: multisig: %d\t Fair Exchange: %d\t CoinJoin: %d\t Stealth Address: %d"%(flag_multisig, flag_fe, flag_coinjoin, flag_sa))
+        # print("Search options: multisig: %d\t Fair Exchange: %d\t CoinJoin: %d\t Stealth Address: %d"%(flag_multisig, flag_fe, flag_coinjoin, flag_sa))
         print("Searching txs from height {} to {}".format(start, end))
 
-        # Multi processing
-        info = Array("I",
-                           [counter_multisig, height_multisig, counter_fe, height_fe, counter_coinjoin, height_coinjoin,
-                            counter_sa, height_sa])
-        lock = Lock()
-
-        for n in range(start, end, batch):
+        # Multi thread?
+        for n in range(start, end):
             t1 = tools.get_time()
             # Using batch commands to speed up searching process
-            commands = [["getblockhash", i] for i in range(n, n + batch)]
-            block_hashes = self.rpc_connection.batch_(commands)
-            blocks = self.rpc_connection.batch_([["getblock", block_hash, 2] for block_hash in block_hashes])
+            # commands = [["getblockhash", i] for i in range(n, n + batch)]
+            # block_hashes = self.rpc.batch_(commands)
+            # blocks = self.rpc.batch_([["getblock", hash, 2] for hash in block_hashes])
 
             # Times and Txs
-            time_list = [block['time'] for block in blocks]
-            times = [tools.convert_time(time) for time in time_list]
-            txs_list = [block['tx'] for block in blocks]
+            # time_list = [block['time'] for block in blocks]
+            # times = [tools.convert_time(time) for time in time_list]
+            # txs_list = [block['tx'] for block in blocks]
+
+            block_hash = self.rpc.getblockhash(n)
+            block = self.rpc.getblock(block_hash, 2)
+            ttime = tools.convert_time(block['time'])
+            txs = block['tx']
             t2 = tools.get_time()
 
-            # Current height
-            height = n
-
-            # Go though every transaction
-            collection = list(zip(txs_list, times))
-            step = floor(len(collection) / 4)
-
-            print("\rFetching blocks in %.2f seconds...Current block: %d" % ((t2 - t1), height), end='', flush=True)
-            core1 = Process(target=self.search, args=(collection[0:step], flags, info, height, lock,))
-            core2 = Process(target=self.search, args=(collection[step:step*2], flags, info, height+step, lock,))
-            core3 = Process(target=self.search, args=(collection[step*2:step*3], flags, info, height+2*step, lock,))
-            core4 = Process(target=self.search, args=(collection[step*3:], flags, info, height+3*step, lock,))
-            core1.start()
-            core2.start()
-            core3.start()
-            core4.start()
-            core1.join()
-            core2.join()
-            core3.join()
-            core4.join()
-
-        # Finish
-        self.close_connection()
-
-    def search(self, collection: list, flags: list, info: Array, height: int, lock: Lock):
-        """Search transactions
-
-        :param collection Data of transactions.
-        :param height Height of starting block
-        :param lock Lock.
-        :param flags List of 4 flags.
-        :param info Array of counters and heights.
-        """
-        for txs, block_time in collection:
             # Go through transactions in one block
+            t3 = tools.get_time()
+            t_txin = 0
+            t_txout = 0
+            t_cj = 0
             for tx in txs:
                 txout = tx["vout"]
                 txin = tx["vin"]
@@ -118,78 +88,82 @@ class Finder:
                 if "scriptSig" not in txin[0]:
                     continue
 
+                # Checking tx in
+                t5 = tools.get_time()
+                for item in txin:
+                    asm = item["scriptSig"]["asm"]
+                    op = self.check_scriptSig(asm)
+                    if op == 0:
+                        continue
+                    elif op == 1 and n > height_multisig:
+                        # Create a new record
+                        self.insert_into_db(op, str(counter_multisig), txid, n, ttime)
+                        counter_multisig += 1
+                        break
+                    elif op == 2 and n > height_fe:
+                        self.insert_into_db(op, str(counter_fe), txid, n, ttime)
+                        counter_fe += 1
+                        break
+                    elif op == 3 and n > height_sa:
+                        self.insert_into_db(4, str(counter_sa), txid, n, ttime)
+                        counter_sa += 1
+                        break
+
+                t6 = tools.get_time()
+                t_txin += t6-t5
+                # print("Check txin: %.4f" % (t6-t5), end="\t")
+
+                # If already found special tx, continue to next tx
+                if op != 0:
+                    # print(" ")
+                    continue
+
                 # Checking tx out
+                t5 = tools.get_time()
                 for item in txout:
                     asm = item["scriptPubKey"]["asm"]
                     op = check_script_type(asm)
                     if op == 0:
                         continue
-
-                    lock.acquire()
-                    try:
-                        # Multisig
-                        if op == 1 and flags[0] and height > info[1]:
-                            # Create a new record
-                            self.insert_into_db(op, str(info[0]), txid, height, block_time)
-                            info[0] += 1
-                        # Fair Exchange
-                        elif op == 2 and flags[1] and height > info[3]:
-                            self.insert_into_db(op, str(info[2]), txid, height, block_time)
-                            info[2] += 1
-                        # Stealth Address
-                        elif op == 3 and flags[3] and height > info[7]:
-                            self.insert_into_db(4, str(info[6]), txid, height, block_time)
-                            info[6] += 1
-                    finally:
-                        lock.release()
+                    elif op == 1 and n > height_multisig:
+                        # Create a new record
+                        self.insert_into_db(op, str(counter_multisig), txid, n,ttime)
+                        counter_multisig += 1
+                        break
+                    elif op == 2 and n > height_fe:
+                        self.insert_into_db(op, str(counter_fe), txid, n, ttime)
+                        counter_fe += 1
+                        break
+                    elif op == 3 and n > height_sa:
+                        self.insert_into_db(4, str(counter_sa), txid, n, ttime)
+                        counter_sa += 1
                         break
 
-                # If already found special tx, continue to next tx
+                t6 = tools.get_time()
+                t_txout += t6-t5
+                # print("Check txout: %.4f" % (t6-t5), end = "\t")
+                
                 if op != 0:
                     continue
 
-                # Checking tx in
-                for item in txin:
-                    asm = item["scriptSig"]["asm"]
-                    lock.acquire()
-                    try:
-                        op = self.check_scriptSig(asm)
-                    finally:
-                        lock.release()
-
-                    if op == 0:
-                        continue
-
-                    lock.acquire()
-                    try:
-                        # Multisig
-                        if op == 1 and flags[0] and height > info[1]:
-                            # Create a new record
-                            self.insert_into_db(op, str(info[0]), txid, height, block_time)
-                            info[0] += 1
-                        # Fair Exchange
-                        elif op == 2 and flags[1] and height > info[3]:
-                            self.insert_into_db(op, str(info[2]), txid, height, block_time)
-                            info[2] += 1
-                        # Stealth Address
-                        elif op == 3 and flags[3] and height > info[7]:
-                            self.insert_into_db(4, str(info[6]), txid, height, block_time)
-                            info[6] += 1
-                    finally:
-                        lock.release()
-                        break
-
-                lock.acquire()
-                try:
-                    if flags[2] and height > info[5] and self.find_coinjoin(tx):
-                        self.insert_into_db(3, str(info[4]), txid, height, block_time)
-                        info[4] += 1
-                finally:
-                    lock.release()
+                
+                # t5 = tools.get_time()
+                # if n > height_coinjoin and self.find_coinjoin(tx):
+                #     self.insert_into_db(3, str(counter_coinjoin), txid, n, ttime)
+                #     counter_coinjoin += 1
+                # t6 = tools.get_time()
+                # t_cj += t6-t5
+                # print("Check coinjoin: %.4f" % (t6-t5), end = "\n")
 
             # Entering next block, height plus 1
-            height += 1
+            
+            t4 = tools.get_time()
+            # print("This block: %.2f" % (t4-t3))
+            print("\rFetching blocks in %.2f seconds， check block time %.2f, txin: %.5f, txout: %.5f, coinjoin: %.5f...Current block: %d" % ((t2-t1), (t4-t3), t_txin, t_txout, 0, n), end="", flush=True)
+            # sleep(5)
 
+        # Finish
+        self.close_connection()
 
     def get_latest_db_info(self, option):
         """Get the height of latest transaction in db
@@ -208,31 +182,29 @@ class Finder:
         else:
             return 0
 
-        sql = "SELECT MAX(id), MAX(height) FROM " + table + ";"
-        with self.mysql_connection.cursor() as cursor:
+        sql = "select id, height from " + table + " order by id DESC limit 1"
+        with self.mysql.cursor() as cursor:
             cursor.execute(sql)
             rv = cursor.fetchall()
-            id = rv[0]['MAX(id)']
-            height = rv[0]['MAX(height)']
-
-            if id is None:
-                id = 0
-            else:
-                id += 1
-
-            if height is None:
-                height = 0
-
-            return id, height
+            if rv:
+                return int(rv[0]['id'])+1, int(rv[0]['height'])
+        return 0, 0
 
     def find_coinjoin(self, tx):
-        num_inputs = self.get_unique_input_addr_len(tx['vin'])
-        coinjoin_outputs, num_outputs = self.get_indistinguishable_output(tx['vout'])
-
-        # Skip all unqualified txs
-        if coinjoin_outputs == 0:
+        if len(tx['vin']) < 2 or len(tx['vout']) < 4:
             return 0
-        if num_inputs < 2 or num_inputs >= num_outputs or num_inputs < num_outputs/2:
+        num_inputs = self.get_unique_input_addr_len(tx['vin'])
+        print(num_inputs)
+        if num_inputs < 2:
+            return 0
+        coinjoin_outputs, num_outputs = self.get_indistinguishable_output(tx['vout'])
+        print(num_outputs)
+        if num_outputs < 4:
+            return 0
+        print(num_outputs)
+        print(coinjoin_outputs)
+        # Skip all unqualified txs
+        if not coinjoin_outputs or num_inputs >= num_outputs or num_inputs < num_outputs/2:
             return 0
 
         # Calculate all coinjoin outputs
@@ -242,14 +214,14 @@ class Finder:
 
         non_coinjoin_outputs = num_inputs - num_coinjoin_outputs
 
-        if coinjoin_outputs and int(coinjoin_outputs[0][1]) <= num_inputs and num_coinjoin_outputs > non_coinjoin_outputs:
+        if int(coinjoin_outputs[0][1]) <= num_inputs and num_coinjoin_outputs > non_coinjoin_outputs:
             return 1
 
         return 0
 
     def get_last_tx(self, txid):
-        hex_tx = self.rpc_connection.getrawtransaction(txid)
-        decoded_tx = self.rpc_connection.decoderawtransaction(hex_tx)
+        hex_tx = self.rpc.getrawtransaction(txid)
+        decoded_tx = self.rpc.decoderawtransaction(hex_tx)
         return decoded_tx
 
     def get_input_address(self, tx, vout):
@@ -322,20 +294,20 @@ class Finder:
         sql = "INSERT INTO `" + table + "` (`id`, `txid`, `height`, `time`) VALUES (%s, '%s', %s, '%s')" % (
             id, txid, height, time)
 
-        with self.mysql_connection.cursor() as cursor:
+        with self.mysql.cursor() as cursor:
             cursor.execute(sql)
-        self.mysql_connection.commit()
+        self.mysql.commit()
 
     def close_connection(self):
         """Close MySql connection"""
-        self.mysql_connection.close()
+        self.mysql.close()
 
     def decode_script(self, hex_code):
         """Decode hex script
 
         :return: Decoded asm code
         """
-        return self.rpc_connection.decodescript(hex_code)
+        return self.rpc.decodescript(hex_code)
 
     def check_scriptSig(self, asm):
         """Check scriptSig asm code
@@ -392,5 +364,4 @@ def check_script_type(asm):
 
 if __name__ == '__main__':
     find = Finder()
-    #  2012-02-02 20:14, Height: 165000
-    find.start(start=261120, batch=80)
+    find.start(start=531227, batch=80)

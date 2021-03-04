@@ -6,3 +6,4 @@ passwords
 node_modules/
 .idea
 semantic/
+finder/deprecated
