@@ -18,78 +18,105 @@ mysql = pymysql.connect(host=mysql_ip, user=user, password=password, db=db,
 # Sort by height
 # df = df.sort_values("height", ignore_index=True)
 
-length = len()
+
+print("Reading database...")
+with mysql.cursor() as cursor:
+    cursor.execute("SELECT * FROM pruned_multisig ORDER BY height;")
+    dat = cursor.fetchall()
+
 results = open("coinswap_results.csv", "w")
 
-def check_connection(tx, tx_index, height):
-    for input in tx.inputs:
-        spent_tx = input.spent_tx
-        if spent_tx.index == tx_index:
+def check_connection(tx, target_index, height):
+    tx_list = [tx]
+    index_list = [tx.index]
+    visited = []
+    while len(tx_list)!=0:
+        tx = tx_list.pop(0)
+        tx_index = index_list.pop(0)
+        if target_index == tx_index:
             return 1
-        elif spent_tx.block_height >= height:
-            result = check_connection(spent_tx, tx_index, height)
-            if result == 1:
-                return result
+
+        visited.append(tx_index)
+        for tx_input in tx.inputs:
+            spent_tx = tx_input.spent_tx
+            spent_index = spent_tx.index
+            if spent_index in visited or spent_index in index_list:
+                continue
+            elif spent_tx.block_height >= height:
+                tx_list.append(spent_tx)
+                index_list.append(spent_tx.index)
     return 0
-    
+
+   
+def extract_dat(row):
+    txid = row['hash'].strip()
+    index = row['index']
+    value = row['value']
+    height = row['height']
+    spending_index = row['spending_index']
+    age = row['age']
+    tx = chain.tx_with_hash(txid)
+    return txid, index, value, height, tx, spending_index, age
   
 txs = []  
 for i in range(0, 10000):
-    row = df.iloc[i]
-    txid = row[1]
-    index = row[2]
-    value = row[3]
-    height = row[4]
-    spending_tx_indx = row[5]
-    age = row[6]
-    tx = chain.tx_with_hash(txid)
-    txs.append((txid, index, value, height, tx, spending_tx_indx, age))
+    row = dat.pop(0)
+    txs.append(extract_dat(row))
     
 
-cursor = 9999
 counter = 0
-while txs is not None:
+while len(txs) != 0:
     tx_info = txs.pop(0)
     txid = tx_info[0]
-    index = tx_info[1]
+    index = int(tx_info[1])
     value = tx_info[2]
     height = tx_info[3]
     tx = tx_info[4]
-    spending_tx_indx = row[5]
-    age = row[6]
+    spending_tx_index = tx_info[5]
+    age = tx_info[6]
      
-    print("\rcurrent height: " % height, end = " ", flush = True)
+    print("\rcurrent height: %s" % height, end = " ", flush = True)
+    #print("current height: %s" % height)
 
     tmp = 0
     len_txs = len(txs)
-    while tmp <= len_txs:
+    while tmp < len_txs:
         next_tx_info = txs[tmp]
         
         if height < next_tx_info[3] - 30:
             break
         
+        tmp += 1
         next_txid = next_tx_info[0]
-        next_index = next_tx_info[1]
+        if next_txid == txid:
+            continue
+
+        next_index = int(next_tx_info[1])
         next_value = next_tx_info[2]
         next_height = next_tx_info[3]
         next_tx = next_tx_info[4]
         next_spending_tx_index = next_tx_info[5]
+        if tx.outputs[index].address == next_tx.outputs[next_index].address:
+            continue
+
         next_age = next_tx_info[6]
-        tmp += 1
         
         if next_height > height + age:
             continue
         
-        if not abs(value.value-next_value.value) < 200000:
-            continue
-        if check_connection == 1:
+        if not abs(value-next_value) < 200000:
             continue
         
-        results.write("%d,%s,%s,%d\n"%(counter, txid, next_txid, height))
+        #print("tx: %s, next_tx: %s, txindex: %s, height: %d"%(txid, next_txid, tx.index, height))
+        #print("checking connection")
+        if check_connection(next_tx, tx.index, height) == 1:
+            continue
+        
+        results.write("%d,%s,%s,%d,%d,%d\n"%(counter, txid, next_txid, height, index, next_index))
         counter += 1
+        if counter % 10000 == 0:
+            results.flush()
             
-
-    cursor += 1
-    if cursor < length:
-        row = df.iloc[cursor]
-        txs.append((row[1], row[2], row[3], row[4], chain.tx_with_hash(row[1]), row[5], row[6]))
+    if len(dat) != 0:
+        row = dat.pop(0)
+        txs.append(extract_dat(row))
