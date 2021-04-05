@@ -8,3 +8,4 @@ node_modules/
 semantic/
 finder/deprecated
 .vscode
+app/static/semantic
