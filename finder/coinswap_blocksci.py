@@ -10,6 +10,7 @@ password = "admin"
 db = "coinswap"
 mysql = pymysql.connect(host=mysql_ip, user=user, password=password, db=db,
                                     cursorclass=pymysql.cursors.DictCursor)
+# length = 14396963
 
 # Open pruned multisig dataset
 # df = pd.read_csv("pruned_multisig.csv", skipinitialspace=True)
@@ -20,11 +21,14 @@ mysql = pymysql.connect(host=mysql_ip, user=user, password=password, db=db,
 
 
 print("Reading database...")
-with mysql.cursor() as cursor:
-    cursor.execute("SELECT * FROM pruned_multisig ORDER BY height;")
-    dat = cursor.fetchall()
+def get_dat(offset, limit):
+    with mysql.cursor() as cursor:
+        cursor.execute("SELECT * FROM ordered_multisig LIMIT offset, limit;" % (offset, limit))
+        dat = cursor.fetchall()
+    return dat
 
-results = open("coinswap_results.csv", "w")
+results = open("updated_coinswap_results.csv", "w")
+results.write("id, txid, next_txid, height, index, next_index\n")
 
 def check_connection(tx, target_index, height):
     tx_list = [tx]
@@ -58,7 +62,13 @@ def extract_dat(row):
     tx = chain.tx_with_hash(txid)
     return txid, index, value, height, tx, spending_index, age
   
-txs = []  
+txs = []
+# dat = get_dat(0)
+with mysql.cursor() as cursor:
+    cursor.execute("SELECT * FROM ordered_multisig LIMIT offset, limit;" % (offset, limit))
+    dat = cursor.fetchall()
+
+# n = 10000
 for i in range(0, 10000):
     row = dat.pop(0)
     txs.append(extract_dat(row))
@@ -82,11 +92,11 @@ while len(txs) != 0:
     len_txs = len(txs)
     while tmp < len_txs:
         next_tx_info = txs[tmp]
-        
+        tmp += 1 
+
         if height < next_tx_info[3] - 30:
             break
         
-        tmp += 1
         next_txid = next_tx_info[0]
         if next_txid == txid:
             continue
@@ -114,9 +124,16 @@ while len(txs) != 0:
         
         results.write("%d,%s,%s,%d,%d,%d\n"%(counter, txid, next_txid, height, index, next_index))
         counter += 1
+        txs.pop(tmp - 1)
         if counter % 10000 == 0:
             results.flush()
+        break
             
     if len(dat) != 0:
         row = dat.pop(0)
         txs.append(extract_dat(row))
+    # else:
+    #     dat = get_dat(n)
+    #     n += 10000
+    #     row = dat.pop(0)
+    #     txs.append(extract_dat(row))

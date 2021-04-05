@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<title> {% block title %} {% endblock %} - Btc Mixing Detection </title>
+<!-- <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/Semantic-UI-CSS-master/semantic.min.css') }}"/>
+<script src="{{ url_for('static', filename='jquery-3.6.0.min.js') }}"></script>
+<script src="{{ url_for('static', filename='css/Semantic-UI-CSS-master/semantic.min.js') }}"></script>
+<div class="ui tablet computer only padded grid">
+    <div class="ui inverted borderless top fixed fluid menu">
+      <a class="header item">Btc Mixing Service Detection and Tracking</a>
+      <div class="right menu">
+        <div class="item">
+          <div class="ui small icon input">
+                <input placeholder="Search..." />
+                <i class="search link icon"></i>
+            </div>
+        </div>
+        <a class="item">Fair Exchange</a> 
+        <a class="item">CoinSwap</a>
+        <a class="item">CoinJoin</a> 
+        <a class="item">Stealth Address</a>
+      </div>
+    </div>
+</div>
+<section class="content">
+    <header>
+        {% block header %}{% endblock %}
+    </header>
+    {% for message in get_flashed_messages() %}
+        <div class="flash">{{ message }}</div>
+    {% endfor %}
+    {% block content %}{% endblock %}
+</section>
