@@ -1,9 +1,13 @@
 from flask import Flask, render_template
-from flask.helpers import url_for
+from livereload import Server
 
 def create_app():
     app = Flask(__name__)
 
+    app.config.update(
+        TESTING=True,
+        TEMPLATES_AUTO_RELOAD=True,
+    )
     @app.route('/hello')
     def hello():
         return "Hello World!"
@@ -12,11 +16,25 @@ def create_app():
     # def page_not_foud(error):
     #     return render_template(url_for('page_not_found.html')), 404
         
-    @app.route('/')
-    def index():
-        return render_template('base.html')
-    return app
+    # @app.route('/')
+    # def index():
+    #     return render_template('home/home.html')
+    from . import home
+    app.register_blueprint(home.bp)
+    app.add_url_rule('/', endpoint='index')
 
+    from . import tx_list
+    app.register_blueprint(tx_list.bp)
+   
+    @app.route('/template')
+    def template():
+        return render_template('index.html')
+
+
+    return app
 if __name__=='__main__':
     app = create_app()
-    app.run()
+    server = Server(app.wsgi_app)
+    server.watch('**/*.*')
+    server.server()
+    # app.run()

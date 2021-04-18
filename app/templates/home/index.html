@@ -1,0 +1,190 @@
+{% extends 'base.html' %} {% block header %}
+<h1>{% block title %}Home{% endblock %} <i class="home icon"></i></h1>
+<script src="{{ url_for('static', filename='js/echarts.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/axios.min.js') }}"></script>
+<!-- <script src='https://cdn.jsdelivr.net/npm/echarts@5.0.2/dist/echarts.min.js'></script> -->
+{% endblock %} {% block content %}
+<p>Welcom to Btc Mixed Transactions Detection and Tracking Project Website.</p>
+<p>
+  Here, you can find some overall statistics about the Bitcoin Blockchain, and
+  the usage of the four following anonymization techniques:
+  <strong>Fair Exchange</strong>, <strong>CoinSwap</strong>,
+  <strong>CoinJoin</strong>, and <strong>Stealth Address</strong>.
+</p>
+
+<div class="ui two column padded grid">
+  <div class="row">
+    <div class="ui basic segment">
+      <h2 class="ui dividing header">Overview</h2>
+      <div class="row">
+        <p>
+          Up to the latest block {{ all_info['block_count'] }}, of all 618.771
+          million Bitcoin transactions, there are:
+        </p>
+        <div class="ui basic segment container">
+          <!-- Statistics -->
+          <div class="ui four statistics">
+            <div class="statistic">
+              <div class="value">{{all_info['fe']}}</div>
+              <div class="label">Fair Exchange</div>
+            </div>
+            <div class="statistic">
+              <div class="value">{{all_info['coinswap']}}</div>
+              <div class="label">CoinSwap</div>
+            </div>
+            <div class="statistic">
+              <div class="value">{{all_info['coinjoin']}}</div>
+              <div class="label">CoinJoin</div>
+            </div>
+            <div class="statistic">
+              <div class="value">{{all_info['sa']}}</div>
+              <div class="label">Stealth Address</div>
+            </div>
+          </div>
+        </div>
+        <p>transactions that implemented anonymization techniques.</p>
+      </div>
+    </div>
+  </div>
+  <!-- <div class="ui section divider"></div> -->
+  <h2 class="ui dividing header">Transactions per year</h2>
+  <div class="center aligned row">
+    <div class="column">
+      <!-- <h4 class="ui header">Fair Exchange</h4> -->
+      <div id="fe" style="width: 600px; height: 250px"></div>
+    </div>
+    <div class="column">
+      <div id="coinswap" style="width: 600px; height: 250px"></div>
+    </div>
+    <div class="column">
+      <div id="coinjoin" style="width: 600px; height: 250px"></div>
+    </div>
+    <div class="column">
+      <div id="sa" style="width: 600px; height: 250px"></div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block my_script %}
+<!-- <script src="{{ url_for('static', filename='js/bar.js') }}">
+  window.onload()=function() {bar();}
+</script> -->
+<script type="text/javascript">
+  var data;
+  axios({
+    method: "get",
+    url: "/api/stats",
+    responseType: "json",
+  }).then(function (response) {
+    data = response.data; 
+    
+    // based on prepared DOM, initialize echarts instance
+    var fe = echarts.init(document.getElementById("fe"));
+
+    // specify chart configuration item and data
+    var fe_option = {
+      title: {
+        text: "Fair Exchange",
+      },
+      tooltip: {},
+      // legend: {
+      //   data: ["Sales"],
+      // },
+      xAxis: {
+        data: ["2014", "2015", "2016", "2017", "2018", "2019", "2020", "2021"],
+      },
+      yAxis: {},
+      series: [
+        {
+          name: "Sales",
+          type: "line",
+          data: [0, 0, 0, 0, 0, 0],
+        },
+      ],
+    };
+
+    // use configuration item and data specified to show chart
+    fe.setOption(fe_option);
+
+    var coinswap = echarts.init(document.getElementById("coinswap"));
+
+    // specify chart configuration item and data
+    var coinswap_option = {
+      title: {
+        text: "CoinSwap",
+      },
+      tooltip: {},
+      // legend: {
+      //   data: ["Sales"],
+      // },
+      xAxis: {
+        data: Object.keys(data["coinswap"]), // ["1", "2", "3", "4", "5", "6"],
+      },
+      yAxis: {},
+      series: [
+        {
+          name: "Sales",
+          type: "line",
+          data: Object.values(data["coinswap"]), // [5, 20, 36, 10, 10, 20],
+        },
+      ],
+    };
+
+    // use configuration item and data specified to show chart
+    coinswap.setOption(coinswap_option);
+
+    var coinjoin = echarts.init(document.getElementById("coinjoin"));
+
+    // specify chart configuration item and data
+    var coinjoin_option = {
+      title: {
+        text: "CoinJoin",
+      },
+      tooltip: {},
+      // legend: {
+      //   data: ["Sales"],
+      // },
+      xAxis: {
+        data: Object.keys(data["coinjoin"]), // ["1", "2", "3", "4", "5", "6"],
+      },
+      yAxis: {},
+      series: [
+        {
+          name: "Sales",
+          type: "line",
+          data: Object.values(data["coinjoin"]), // [5, 20, 36, 10, 10, 20],
+        },
+      ],
+    };
+
+    // use configuration item and data specified to show chart
+    coinjoin.setOption(coinjoin_option);
+
+    var sa = echarts.init(document.getElementById("sa"));
+
+    // specify chart configuration item and data
+    var sa_option = {
+      title: {
+        text: "Stealth Address",
+      },
+      tooltip: {},
+      // legend: {
+      //   data: ["Sales"],
+      // },
+      xAxis: {
+        data: Object.keys(data["sa"]), // ["1", "2", "3", "4", "5", "6"],
+      },
+      yAxis: {},
+      series: [
+        {
+          name: "Sales",
+          type: "line",
+          data: Object.values(data["sa"]), // [5, 20, 36, 10, 10, 20],
+        },
+      ],
+    };
+
+    // use configuration item and data specified to show chart
+    sa.setOption(sa_option);
+  });
+</script>
+{% endblock %}
