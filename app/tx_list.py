@@ -1,5 +1,5 @@
 from flask import (
-    Blueprint, g, redirect, render_template, request, url_for
+    Blueprint, g, redirect, render_template, request, url_for, jsonify
 )
 
 bp = Blueprint('txs', __name__, url_prefix='/txs')
@@ -20,3 +20,12 @@ def coinjoin():
 @bp.route('/sa', methods=('GET', 'POST'))
 def sa():
     return render_template('transactions/list.html', tx_type='Stealth Address')
+
+@bp.route('/api/table/', methods=('GET', 'POST'))
+def get_data():
+    id = request.args.get('id')
+    type = request.args.get('type')
+    print(type)
+    print(id)
+    
+    return jsonify({'type': type, 'id': id})

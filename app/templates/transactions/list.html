@@ -2,6 +2,8 @@
 
 {% block header %}
     {% block title %}{{ tx_type }}{% endblock %}
+    <script src="{{ url_for('static', filename='js/axios.min.js') }}"></script>
+    <!-- <script src="{{ url_for('static', filename='js/axios.min.map') }}"></script> -->
 {% endblock %}
 
 {% block content %}
@@ -10,6 +12,7 @@
 <div id="like_button_container"></div>
 <script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
 <script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-table@7.6.3/dist/react-table.production.min.js" crossorigin></script>
 
 <script src="{{ url_for('static', filename='js/like_button.js') }}"></script>
 
