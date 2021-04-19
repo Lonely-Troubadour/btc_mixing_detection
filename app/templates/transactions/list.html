@@ -1,18 +1,16 @@
 {% extends 'base.html' %}
 
 {% block header %}
-    <!-- {% if tx_type=='fe' %}
-        {% block title %}Fair Exchange{% endblock %}
-    {% elif tx_type=='coinswap' %}
-        {% block title %}CoinSwap{% endblock %}
-    {% elif tx_type=='coinjoin' %}
-        {% block title %}CoinJoin{% endblock %}
-    {% elif tx_type=='sa' %}
-        {% block title %}Stealth Address{% endblock %}
-    {% endif %} -->
     {% block title %}{{ tx_type }}{% endblock %}
 {% endblock %}
 
 {% block content %}
 <p>This is type {{ tx_type }}.</p>
+<div id="table"></div>
+<div id="like_button_container"></div>
+<script src="https://unpkg.com/react@17/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@17/umd/react-dom.development.js" crossorigin></script>
+
+<script src="{{ url_for('static', filename='js/like_button.js') }}"></script>
+
 {% endblock %}
