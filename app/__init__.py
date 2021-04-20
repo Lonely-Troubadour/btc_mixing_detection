@@ -16,9 +16,10 @@ def create_app():
     # def page_not_foud(error):
     #     return render_template(url_for('page_not_found.html')), 404
         
-    # @app.route('/')
-    # def index():
-    #     return render_template('home/home.html')
+    @app.route('/index')
+    def index():
+        return render_template('index.html', token="hello react")
+
     from . import home
     app.register_blueprint(home.bp)
     app.add_url_rule('/', endpoint='index')

@@ -1,0 +1,122 @@
+{% extends 'base.html' %} {% block header %}
+<h1>{% block title %}Statistics{%endblock %}</h1>
+{% endblock %} {% block content %}
+<div class="ui basic segment container">
+  {% if tx_type == 'fe' %}
+    <h1 class="ui center aligned icon header">
+        <i class="ambulance icon"></i>Oops!
+        <div class="sub header">There is no data.</div>
+    </h1>
+  {% else %}
+  <div id="main" style="width: 1000px; height: 600px"></div>
+  {% endif%}
+</div>
+
+<script type="text/javascript">
+  var chartDom = document.getElementById("main");
+  var myChart = echarts.init(chartDom);
+  var option;
+  var title;
+  const tx_type = "{{ tx_type }}";
+  
+
+  if (tx_type == "all") {
+      url = "/api/overallStat";
+      title = "All protocols"
+  } else {
+      url = "/api/statics?type=" + tx_type;
+  }
+
+  if (tx_type == "coinswap") {
+      title = "CoinSwap";
+  } else if (tx_type == "coinjoin") {
+      title = "CoinJoin";
+  } else {
+      title = "Stealth Address";
+  }
+
+  // get data
+  axios({
+      method: "get",
+      url: url,
+      responseType: "json",
+    }).then(response => {
+        makeChart(response.data)
+    });
+
+  function makeChart(data) {
+    console.log(data)
+    columns = data.map(row => row[0])
+    values = data.map(row => row[1])
+    // Object.keys(data).forEach
+    option = {
+      tooltip: {
+        trigger: "axis",
+        position: function (pt) {
+          return [pt[0], "10%"];
+        },
+      },
+      title: {
+        left: "center",
+        text: title + " Transactions per Day",
+      },
+      toolbox: {
+        feature: {
+          dataZoom: {
+            yAxisIndex: "none",
+          },
+          restore: {},
+          saveAsImage: {},
+        },
+      },
+      xAxis: {
+        type: "category",
+        boundaryGap: false,
+        data: columns, // date,
+      },
+      yAxis: {
+        type: "value",
+        boundaryGap: [0, "100%"],
+      },
+      dataZoom: [
+        {
+          type: "inside",
+          start: 0,
+          end: 10,
+        },
+        {
+          start: 0,
+          end: 10,
+        },
+      ],
+      series: [
+        {
+          name: "Txs",
+          type: "line",
+          symbol: "none",
+          sampling: "lttb",
+          itemStyle: {
+            color: "rgb(255, 70, 131)",
+          },
+          areaStyle: {
+            color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+              {
+                offset: 0,
+                color: "rgb(255, 158, 68)",
+              },
+              {
+                offset: 1,
+                color: "rgb(255, 70, 131)",
+              },
+            ]),
+          },
+          data: values, // data,
+        },
+      ],
+    };
+
+    option && myChart.setOption(option);
+  }
+</script>
+
+{% endblock %}

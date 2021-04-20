@@ -1,37 +1,24 @@
-"use strict";
+// const {useState, useEffect} = React;
 
-const e = React.createElement;
-const [data, setData] = React.useState([]);
+const App = (props) => {
+  const [data, setData] = React.useState([]);
 
-React.useEffect(() => {
-  (async () => {
-    const result = await axios({
-      method: "get",
-      url: "api/table/?id=1&type=fe",
-      responseType: "json",
-    });
-    setData(result.data);
-  })();
-}, []);
+  React.useEffect(() => {
+    (async () => {
+      const result = await axios({
+        method: "get",
+        url: "api/table/?id=1&type=fe",
+        responseType: "json",
+      });
+      setData(result.data);
+    })();
+  }, []);
+  console.log(data)
 
-class LikeButton extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = { liked: false };
-  }
-
-  render() {
-    if (this.state.liked) {
-      return "You liked this.";
-    }
-
-    return e(
-      "button",
-      { onClick: () => this.setState({ liked: true }) },
-      "Like"
-    );
-  }
+  return (
+    <div>{data}</div>
+  )
 }
 
 const domContainer = document.querySelector("#like_button_container");
-ReactDOM.render(e(LikeButton), domContainer);
+ReactDOM.render(<App />, domContainer);

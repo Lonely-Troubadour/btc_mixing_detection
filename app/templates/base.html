@@ -6,6 +6,8 @@
     rel="stylesheet"
     href="{{ url_for('static', filename='Semantic-UI-CSS-master/semantic.min.css') }}"
   />
+  <script src="{{ url_for('static', filename='js/echarts.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/axios.min.js') }}"></script>
   <style type="text/css">
     body {
       -webkit-font-smoothing: antialiased;
@@ -75,7 +77,9 @@
   <div class="ui inverted segment">
     <div class="ui tablet computer only padded grid">
       <div class="ui inverted borderless top fixed fluid menu">
-        <a class="header item">Btc Mixed-Txs Detection & Tracking</a>
+        <a href="{{ url_for('home.index') }}" class="header item"
+          >Btc Mixed-Txs Detection & Tracking</a
+        >
         <div class="right secondary menu">
           <div class="item">
             <div class="ui small icon input">
@@ -83,10 +87,12 @@
               <i class="search link icon"></i>
             </div>
           </div>
-          <a class="item action" href="{{ url_for('txs.fe') }}">Fair Exchange</a>
-          <a class="item" href="{{ url_for('txs.coinswap') }}">CoinSwap</a>
-          <a class="item" href="{{ url_for('txs.coinjoin') }}">CoinJoin</a>
-          <a class="item" href="{{ url_for('txs.sa') }}">Stealth Address</a>
+          <a class="item action" href="{{ url_for('txs.fe') }}"
+            >Fair Exchange</a
+          >
+          <a class="item" href="{{ url_for('txs.coinswap')}}">CoinSwap</a>
+          <a class="item" href="{{ url_for('txs.coinjoin')}}">CoinJoin</a>
+          <a class="item" href="{{ url_for('txs.sa')}}">Stealth Address</a>
         </div>
       </div>
     </div>
@@ -121,14 +127,21 @@
     >
       <div class="ui vertical borderless fluid text menu">
         <a class="active item">Overview</a>
-        <a class="item">Analytics</a> <a class="item">Export</a>
+        <a href="{{ url_for('home.statics', type='all')}}" class="item">Analytics</a>
         <div class="ui hidden divider"></div>
-        <a class="item">Nav item</a> <a class="item">Nav item again</a>
-        <a class="item">One more nav</a> <a class="item">Another nav item</a>
-        <a class="item">More navigation</a>
+        <a href="{{ url_for('home.statics', type='fe')}}" class="item"
+          >Fair Exchange Analytics</a
+        >
+        <a href="{{ url_for('home.statics', type='coinswap')}}" class="item"
+          >CoinSwap Analytics</a
+        >
+        <a href="{{ url_for('home.statics', type='coinjoin') }}" class="item"
+          >CoinJoin Analytics</a
+        >
+        <a href="{{ url_for('home.statics', type='sa') }}" class="item"
+          >Stealth Address Analytics</a
+        >
         <div class="ui hidden divider"></div>
-        <a class="item">Macintosh</a> <a class="item">Linux</a>
-        <a class="item">Windows</a>
       </div>
     </div>
     <!-- Page content -->
