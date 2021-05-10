@@ -82,10 +82,14 @@
         >
         <div class="right secondary menu">
           <div class="item">
-            <div class="ui small icon input">
-              <input placeholder="Search..." />
-              <i class="search link icon"></i>
-            </div>
+            <form method="get" action="{{ url_for('home.search')}}">
+               <div class="ui small icon action input">
+                <input id="hash" name="hash" placeholder="Search..." value="{{ request.form['hash'] }}"/>
+                <button class="ui icon button" type="submit">
+                  <i class="search link icon"></i>
+                </butoon>
+              </div>
+            </form>
           </div>
           <a class="item action" href="{{ url_for('txs.fe') }}"
             >Fair Exchange</a

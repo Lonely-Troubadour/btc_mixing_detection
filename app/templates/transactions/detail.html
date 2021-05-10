@@ -1,0 +1,52 @@
+{% extends 'base.html' %} {% block header %}
+
+<h1 class="ui header">
+  {% block title %} {{ tx_type }} Transaction {% endblock %}<i class="small bookmark outline icon"></i>
+</h1>
+
+<script src="{{ url_for('static', filename='js/axios.min.js') }}"></script>
+<script src="{{ url_for('static', filename='js/jquery-3.6.0.min.js')}}"></script>
+{% endblock %} {% block content %}
+{% if tx_type == 'Unknown' %}
+    <h1 class="ui center aligned icon header">
+        <i class="ambulance icon"></i>Oops!
+        <div class="sub header">There is no data.</div>
+    </h1>
+{% else %}
+  <div class="main">
+    <table class="ui collapsing celled table">
+    <thead>
+        <tr><th>Property</th>
+        <th>Value</th>
+    </tr></thead>
+    <tbody>
+        <tr>
+        <td data-label="Name">Id</td>
+        <td data-label="Age">{{ data['id'] }}</td>
+        </tr>
+        <tr>
+        <td data-label="Name">Hash</td>
+        <td data-label="Age">{{ data['hash'] }}</td>
+        </tr>
+        <tr>
+        <td data-label="Name">Height</td>
+        <td data-label="Age">{{ data['height'] }}</td>
+        </tr>
+        <tr>
+            <td data-label="Name">Time</td>
+            <td data-label="Age">{{ data['time'] }}</td>
+        </tr>
+    </tbody>
+    </table>
+  </div>
+{% endif%}
+
+<!-- <script type="text/javascript">
+$(document).ready(function () {
+    $('.ui.modal').modal('show');
+});
+</script> -->
+
+<!-- <script src="{{ url_for('static', filename='js/like_button.js') }}"></script> -->
+
+{% endblock %}

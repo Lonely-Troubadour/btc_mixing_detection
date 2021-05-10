@@ -24,12 +24,55 @@ def index():
         cursor.execute('SELECT id FROM stealth_address ORDER BY id desc limit 1;')
         re = cursor.fetchone()
         stealth_address = re[0]+1
-       
+    
     all_info = {
         'all':100, 'fe':0, 'coinswap':coinswap, 'coinjoin':coinjoin, 'sa':stealth_address, 
         'block_count': 671795
     }
     return render_template('home/index.html', all_info=all_info)
+
+@bp.route('/search', methods=('GET', 'POST'))
+def search():
+    db =get_db()
+    tx_hash = request.args.get('hash')
+    # tx_hash = request.form['hash']
+    print(tx_hash)
+    tx_type='coinjoin'
+    with db.cursor() as cursor:
+        sql = 'SELECT * FROM ' +tx_type + ' WHERE txid="'+tx_hash+'";'
+        cursor.execute(sql)
+        re = cursor.fetchone()
+        if re is None:
+            tx_type = 'coinswap'
+            sql = 'SELECT id, txid, next_txid, height, time FROM ' +tx_type + ' WHERE txid="'+tx_hash+'";'
+            cursor.execute(sql)
+            re = cursor.fetchone()
+
+        if re is None:
+            tx_type='stealth_address'
+            sql = 'SELECT * FROM ' +tx_type + ' WHERE txid="'+tx_hash+'";'
+            cursor.execute(sql)
+            re = cursor.fetchone()
+        
+        if re is None:
+            tx_type='Unknown'
+        print(re)
+
+        if re is not None:
+            if tx_type == 'coinswap':
+                tx_type = 'CoinSwap'
+                data= {'id':re[0], 'hash':re[1]+';\n      Paired: '+re[2], 'height':re[3], 'time':str(re[4])}
+            else:
+                data={'id':re[0], 'hash':re[1], 'height':re[2], 'time':str(re[3])}
+                if tx_type == 'coinjoin':
+                    tx_type = 'CoinJoin'
+                else:
+                    tx_type = "Stealth Address"
+        else:
+            data={}
+
+    return render_template('transactions/detail.html', tx_type=tx_type,data=data)
+
 
 @bp.route('/api/stats')
 def get_stats():
