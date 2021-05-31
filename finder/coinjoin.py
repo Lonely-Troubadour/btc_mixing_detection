@@ -1,7 +1,7 @@
 import blocksci
 from collections import Counter
 chain = blocksci.Blockchain("config.txt")
-f = open('results.txt', 'a') 
+f = open('coinjoin_results.sql', 'a') 
 
 block = chain.blocks[253486]
 #block = chain.blocks[285212]

@@ -105,13 +105,14 @@ for n in range(0, num, 1000):
         for output in outputs:
             if not output.is_spent:
                 continue
-            if output.spending_input.age > 30:
+            age = output.spending_input.age
+            if age > 30:
                 continue
             # results.write("%d, %s, %d, %d, %d\n" % (counter, output.tx.hash, output.index, output.value, output.block.height))
             with mysql.cursor() as cursor:
                 cursor.execute(
-                    "INSERT INTO btc_transactions.pruned_multisig (`id`, `txid`, `index`, `value`, `height`) VALUES (%s, '%s', %s, '%s', '%s')" % (
-                        counter, tx['txid'], output.index, output.value, height))
+                    "INSERT INTO pruned_multisig (`id`, `hash`, `index`, `value`, `height`, `spending_tx_index`, `age`) VALUES (%s, '%s', %s, '%s', '%s', '%s', '%s')" % (
+                        counter, output.tx.hash, output.index, output.value, output.block.height, output.spending_tx_index, age))
                 counter += 1
     mysql.commit()
 

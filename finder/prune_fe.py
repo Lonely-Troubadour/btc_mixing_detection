@@ -9,7 +9,7 @@ rpc = tools.connect_prc()
 pattern = re.compile(r' OP_CHECKSIGVERIFY OP_IF .* OP_CHECKSIG OP_ELSE .* (OP_EQUAL.*OP_SWAP.*OP_BOOLOR|OP_EQUALVERIFY.*OP_EQUAL.*) .* OP_ENDIF')
 
 with mysql.cursor() as cursor:
-    cursor.execute("SELECT COUNT(*) FROM btc_transactions.fair_exchange;")
+    cursor.execute("SELECT COUNT(*) FROM fair_exchange;")
     result = cursor.fetchall()
     num = result[0]['COUNT(*)']
 
@@ -18,7 +18,7 @@ f2 = open("fe_out_asm.txt", "w")
 counter = 0
 for n in range(0, num, 1000):
     with mysql.cursor() as cursor:
-        cursor.execute("SELECT * FROM btc_transactions.fair_exchange LIMIT %d, 1000;" % n)
+        cursor.execute("SELECT * FROM fair_exchange LIMIT %d, 1000;" % n)
         txs = cursor.fetchall()
 
     for i in range(len(txs)):

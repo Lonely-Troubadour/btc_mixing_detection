@@ -43,20 +43,20 @@ class Finder:
         counter_sa, height_sa = self.get_latest_db_info(3)
 
         # flags
-        # flag_multisig = (option & 0b1000) >> 3
-        # flag_fe = (option & 0b0100) >> 2
-        # flag_coinjoin = (option & 0b0010) >> 1
-        # flag_sa = (option & 0b0001)
+        flag_multisig = (option & 0b1000) >> 3
+        flag_fe = (option & 0b0100) >> 2
+        flag_coinjoin = (option & 0b0010) >> 1
+        flag_sa = (option & 0b0001)
 
         if end == 0:
             end = self.get_height()
 
-        # print("Search options: multisig: %d\t Fair Exchange: %d\t CoinJoin: %d\t Stealth Address: %d"%(flag_multisig, flag_fe, flag_coinjoin, flag_sa))
+        print("Search options: multisig: %d\t Fair Exchange: %d\t CoinJoin: %d\t Stealth Address: %d"%(flag_multisig, flag_fe, flag_coinjoin, flag_sa))
         print("Searching txs from height {} to {}".format(start, end))
 
         # Multi thread?
         for n in range(start, end):
-            t1 = tools.get_time()
+            # t1 = tools.get_time()
             # Using batch commands to speed up searching process
             # commands = [["getblockhash", i] for i in range(n, n + batch)]
             # block_hashes = self.rpc.batch_(commands)
@@ -71,13 +71,10 @@ class Finder:
             block = self.rpc.getblock(block_hash, 2)
             ttime = tools.convert_time(block['time'])
             txs = block['tx']
-            t2 = tools.get_time()
+            # t2 = tools.get_time()
 
             # Go through transactions in one block
-            t3 = tools.get_time()
-            t_txin = 0
-            t_txout = 0
-            t_cj = 0
+            # t3 = tools.get_time()
             for tx in txs:
                 txout = tx["vout"]
                 txin = tx["vin"]
@@ -89,28 +86,25 @@ class Finder:
                     continue
 
                 # Checking tx in
-                t5 = tools.get_time()
                 for item in txin:
                     asm = item["scriptSig"]["asm"]
                     op = self.check_scriptSig(asm)
                     if op == 0:
                         continue
-                    elif op == 1 and n > height_multisig:
+                    elif flag_multisig and op == 1 and n > height_multisig:
                         # Create a new record
                         self.insert_into_db(op, str(counter_multisig), txid, n, ttime)
                         counter_multisig += 1
                         break
-                    elif op == 2 and n > height_fe:
+                    elif flag_fe and op == 2 and n > height_fe:
                         self.insert_into_db(op, str(counter_fe), txid, n, ttime)
                         counter_fe += 1
                         break
-                    elif op == 3 and n > height_sa:
+                    elif flag_sa and op == 3 and n > height_sa:
                         self.insert_into_db(4, str(counter_sa), txid, n, ttime)
                         counter_sa += 1
                         break
 
-                t6 = tools.get_time()
-                t_txin += t6-t5
                 # print("Check txin: %.4f" % (t6-t5), end="\t")
 
                 # If already found special tx, continue to next tx
@@ -119,29 +113,25 @@ class Finder:
                     continue
 
                 # Checking tx out
-                t5 = tools.get_time()
                 for item in txout:
                     asm = item["scriptPubKey"]["asm"]
                     op = check_script_type(asm)
                     if op == 0:
                         continue
-                    elif op == 1 and n > height_multisig:
+                    elif flag_multisig and op == 1 and n > height_multisig:
                         # Create a new record
                         self.insert_into_db(op, str(counter_multisig), txid, n,ttime)
                         counter_multisig += 1
                         break
-                    elif op == 2 and n > height_fe:
+                    elif flag_fe and op == 2 and n > height_fe:
                         self.insert_into_db(op, str(counter_fe), txid, n, ttime)
                         counter_fe += 1
                         break
-                    elif op == 3 and n > height_sa:
+                    elif flag_sa and op == 3 and n > height_sa:
                         self.insert_into_db(4, str(counter_sa), txid, n, ttime)
                         counter_sa += 1
                         break
 
-                t6 = tools.get_time()
-                t_txout += t6-t5
-                # print("Check txout: %.4f" % (t6-t5), end = "\t")
                 
                 if op != 0:
                     continue
@@ -157,10 +147,9 @@ class Finder:
 
             # Entering next block, height plus 1
             
-            t4 = tools.get_time()
             # print("This block: %.2f" % (t4-t3))
-            print("\rFetching blocks in %.2f seconds， check block time %.2f, txin: %.5f, txout: %.5f, coinjoin: %.5f...Current block: %d" % ((t2-t1), (t4-t3), t_txin, t_txout, 0, n), end="", flush=True)
-            # sleep(5)
+            # print("\rFetching blocks in %.2f seconds， check block time %.2f, txin: %.5f, txout: %.5f, coinjoin: %.5f...Current block: %d" % ((t2-t1), (t4-t3), t_txin, t_txout, 0, n), end="", flush=True)
+            print("\rCurrent block: %d" % (n), end="", flush=True)
 
         # Finish
         self.close_connection()
@@ -364,4 +353,4 @@ def check_script_type(asm):
 
 if __name__ == '__main__':
     find = Finder()
-    find.start(start=531227, batch=80)
+    find.start(start=0, batch=80)

@@ -1,15 +1,17 @@
 import blocksci
-import pandas as pd
+# import pandas as pd
 import pymysql
+import tools
 
 # Blockchain
 chain = blocksci.Blockchain("config.txt")
-mysql_ip = "127.0.0.1"
-user = "admin"
-password = "admin"
-db = "coinswap"
-mysql = pymysql.connect(host=mysql_ip, user=user, password=password, db=db,
-                                    cursorclass=pymysql.cursors.DictCursor)
+# mysql_ip = "127.0.0.1"
+# user = "admin"
+# password = "admin"
+# db = "coinswap"
+# mysql = pymysql.connect(host=mysql_ip, user=user, password=password, db=db,
+#                                     cursorclass=pymysql.cursors.DictCursor)
+mysql = tools.connect_mysql()
 # length = 14396963
 
 # Open pruned multisig dataset
@@ -27,7 +29,7 @@ def get_dat(offset, limit):
         dat = cursor.fetchall()
     return dat
 
-results = open("updated_coinswap_results.csv", "w")
+results = open("coinswap_results.csv", "w")
 results.write("id, txid, next_txid, height, index, next_index\n")
 
 def check_connection(tx, target_index, height):
@@ -65,7 +67,7 @@ def extract_dat(row):
 txs = []
 # dat = get_dat(0)
 with mysql.cursor() as cursor:
-    cursor.execute("SELECT * FROM ordered_multisig LIMIT offset, limit;" % (offset, limit))
+    cursor.execute("SELECT * FROM pruned_multisig;")
     dat = cursor.fetchall()
 
 # n = 10000
